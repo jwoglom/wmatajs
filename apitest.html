@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+    <title>StationStatus</title>
+
+</head>
+<body>
+<script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<script type="text/javascript">
+d = function(t) { console.log("*"+t); }
+
+WMATA = {
+    params: {
+        "api_key": "***REMOVED***",
+        "format": "json"
+    },
+    // Run a modified jQuery.get
+    query: function(path, param, cb) {
+        if(typeof param == 'function' && cb == null) {
+            cb = param;
+        }
+        var url = "query.php?path=" + path + "&" + $.param(this.params) + "&" + $.param(param);
+        $.get(url, {}, function(ret) {
+            cb(JSON.parse(ret));
+        }, "text");
+    }
+}
+
+
+Rail = function(params) {
+    this.name = params.DisplayName,
+    this.lines = {},
+    this.stations = {},
+
+    this.addLine = function(line) {
+        var cd = line.code;
+        this.lines[cd] = line;
+    },
+    this.getLine = function(cd) {
+        return this.lines[cd];
+    },
+    this.fill = function() {
+        this.fillLines();
+        this.fillStations();
+    },
+    this.fillLines = function() {
+        var ths = this;
+        WMATA.query("Rail.svc/json/jLines", function(j) {
+            var lines = j["Lines"];
+            ths.linesJSON = lines;
+            for(key in lines) {
+                var line = lines[key];
+                var obj = new Line(line);
+                ths.addLine(obj);
+            }
+        });
+    },
+    this.addStation = function(station) {
+        var cd = station.code;
+        this.stations[cd] = station;
+    },
+    this.getStation = function(cd) {
+        return this.stations[cd];
+    },
+    this.fillStations = function() {
+        var ths = this;
+        WMATA.query("Rail.svc/json/jStations", function(j) {
+            var stations = j["Stations"];
+            ths.stationsJSON = stations;
+            for(key in stations) {
+                var station = stations[key];
+                var obj = new Station(station);
+                ths.addStation(obj);
+            }
+            // Must be run after all stations have been created
+            // Use the new object of station objects, th(i)s.stations
+            // instead of the local var stations
+            for(key in ths.stations) {
+                ths.addStationGroupings(ths.stations[key]);
+            }
+        })
+    },
+    this.addStationGroupings = function(station) {
+        var lns = station.lineIDs;
+        for(var i=0; i<lns.length; i++) {
+            var ln = lns[i];
+            if(ln != null) {
+                d("Grouped "+station+" on "+this.lines[ln]);
+                this.lines[ln].stations[station.code] = station;
+                station.lines.push(this.lines[ln]);
+            }
+        }
+
+        var tog = station.togetherIDs;
+        for(var i=0; i<tog.length; i++) {
+            var to = tog[i];
+            if(to != null && to != "") {
+                var nto = this.stations[to];
+                d("Grouped "+station+" together with "+nto);
+                station.together.push(nto);
+            }
+        }
+    };
+};
+Rail.prototype = {
+    toString: function() {
+        return this.name+" ("+this.code+")";
+    }
+};
+Line = function(params) {
+    this.name = params.DisplayName,
+    this.code = params.LineCode,
+    this.codes = {
+        start: params.StartStationCode,
+        end: params.EndStationCode,
+        intstart: params.InternalDestination1, // Alternative start
+        intend: params.InternalDestination2 // Alternative end
+    },
+    this.stations = {};
+    d("Created Line "+this);
+};
+Line.prototype = {
+    toString: function() {
+        return this.name+" ("+this.code+")";
+    }
+};
+
+Station = function(params) {
+    this.name = params.Name,
+    this.code = params.Code,
+    this.together = [],
+    this.togetherIDs = [
+        params.StationTogether1,
+        params.StationTogether2
+    ],
+    this.lines = [],
+    this.lineIDs = [
+        params.LineCode1,
+        params.LineCode2,
+        params.LineCode3,
+        params.LineCode4
+    ],
+    this.location = [
+        params.Lat,
+        params.Lon
+    ];
+    d("Created Station "+this);
+}
+Station.prototype = {
+    toString: function() {
+        return this.name+" ("+this.code+")";
+    }
+};
+
+metro = new Rail({
+    DisplayName: "Washington Metro"
+});
+
+metro.fill();
+
+
+</script>
+</body>
+</html>
