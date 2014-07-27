@@ -40,10 +40,13 @@ Rail = function(params) {
         return this.lines[cd];
     },
     this.fill = function() {
-        this.fillLines();
-        this.fillStations();
+        this.fillLines(function() {
+            this.fillStations(function() {
+                this.fillRoutes();
+            });
+        });
     },
-    this.fillLines = function() {
+    this.fillLines = function(cb) {
         var ths = this;
         WMATA.query("Rail.svc/json/jLines", function(j) {
             var lines = j["Lines"];
@@ -53,7 +56,48 @@ Rail = function(params) {
                 var obj = new Line(line);
                 ths.addLine(obj);
             }
+            if(cb) cb.bind(ths)();
         });
+    },
+    this.getLineRoute = function(line) {
+        var ths = this;
+        WMATA.query("Rail.svc/json/jPath", {
+            FromStationCode: line.codes.start,
+            ToStationCode: line.codes.end
+        }, function(j) {
+            d("Calculating "+line+" route");
+            ths.calcLineRoute(line, j);
+        });
+    },
+    this.calcLineRoute = function(line, j) {
+        var paths = j["Path"];
+        var last = null, last2 = null;
+        for(key in paths) {
+            var path = paths[key];
+            var st = this.stations[path.StationCode];
+            var ln = path.LineCode;
+            this.lines[ln].route.push(st);
+            st.pos[ln] = path.SeqNum;
+            st.dist[ln] = path.DistanceToPrev;
+            if(last != null) {
+                last.next[ln] = st;
+                st.prev[ln] = last;
+            } else {
+                st.prev[ln] = false; // First station
+            }
+            last2 = last; last = st;
+        }
+        if(last != null) {
+            last.prev[ln] = last2;
+            last.next[ln] = false; // Last station
+        }
+    },
+    this.fillRoutes = function() {
+        for(key in this.lines) {
+            var line = this.lines[key];
+            console.log(line);
+            this.getLineRoute(line);
+        }
     },
     this.addStation = function(station) {
         var cd = station.code;
@@ -62,7 +106,7 @@ Rail = function(params) {
     this.getStation = function(cd) {
         return this.stations[cd];
     },
-    this.fillStations = function() {
+    this.fillStations = function(cb) {
         var ths = this;
         WMATA.query("Rail.svc/json/jStations", function(j) {
             var stations = j["Stations"];
@@ -78,6 +122,7 @@ Rail = function(params) {
             for(key in ths.stations) {
                 ths.addStationGroupings(ths.stations[key]);
             }
+            if(cb) cb.bind(ths)();
         })
     },
     this.addStationGroupings = function(station) {
@@ -102,11 +147,13 @@ Rail = function(params) {
         }
     };
 };
+
 Rail.prototype = {
     toString: function() {
         return this.name+" ("+this.code+")";
     }
 };
+
 Line = function(params) {
     this.name = params.DisplayName,
     this.code = params.LineCode,
@@ -116,9 +163,11 @@ Line = function(params) {
         intstart: params.InternalDestination1, // Alternative start
         intend: params.InternalDestination2 // Alternative end
     },
-    this.stations = {};
+    this.stations = {}, // Object of stations by code
+    this.route = []; // Array of stations in order
     d("Created Line "+this);
 };
+
 Line.prototype = {
     toString: function() {
         return this.name+" ("+this.code+")";
@@ -128,12 +177,12 @@ Line.prototype = {
 Station = function(params) {
     this.name = params.Name,
     this.code = params.Code,
-    this.together = [],
+    this.together = [], // Array of station objects
     this.togetherIDs = [
         params.StationTogether1,
         params.StationTogether2
     ],
-    this.lines = [],
+    this.lines = [], // Array of line objects
     this.lineIDs = [
         params.LineCode1,
         params.LineCode2,
@@ -143,9 +192,14 @@ Station = function(params) {
     this.location = [
         params.Lat,
         params.Lon
-    ];
+    ],
+    this.dist = {}, // Distance to previous station, by line
+    this.pos = {},  // Order placement, by line
+    this.prev = {}, // Object of station objects, by line
+    this.next = {}; // Object of station objects, by line
     d("Created Station "+this);
-}
+};
+
 Station.prototype = {
     toString: function() {
         return this.name+" ("+this.code+")";
