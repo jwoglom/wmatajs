@@ -218,51 +218,76 @@ YL: rgb(247, 212, 24)
 RD: rgb(191, 18, 56)
 GR: rgb(2, 177, 82)
 */
+lines {
+    position: absolute;
+}
 line {
-    display: inline-block;
+    display: table-cell;
     width: auto;
     height: 64px;
     border-radius: 15px;
-    padding: 0 50px;
+    padding-right: 50px;
     margin: 0 10px;
 }
-*[red] {
+line[red] {
     background-color: rgb(191, 18, 56);
     margin: 1px solid rgb(245, 205, 212);
 }
 route-label {
-    display: inline-block;
-    width: 64px;
+    display: table-cell;
+    width: 74px;
     height: 64px;
     background-image: url(lbl-red.png);
     background-size: 64px 64px;
+    background-repeat: no-repeat;
+    background-position: center center;
 }
 line dot {
-    display: inline-block;
+    position: relative;
+    display: table-cell;
     background-image: url(dot.svg);
-    width: 60px;
-    height: 60px;
-    margin: 2px 10px;
+    background-repeat: no-repeat;
+    width: 64px;
+    height: 64px;
+    background-position: 2px 2px;
+    margin: 2px 40px;
+    border-left: 50px solid transparent;
 }
 line dot station {
     position: absolute;
     top: 105px;
     margin-left: -60px;
-    width: 100px;
+    width: 120px;
     display: inline-block;
     transform: rotate(-45deg);
     text-align: right;
 }
 </style>
-<div class="lines">
+<lines>
     <route-label red></route-label>
     <line red>
-        <dot>
-            <station>Shady Grove</station>
-        </dot>
-        <dot>
-            <station>Rockville</station>
-        </dot>
+        
+            <dot>
+                <station>Shady Grove</station>
+            </dot>
+            <dot>
+                <station>Rockville</station>
+            </dot>
+        
+            <dot>
+                <station>Tenleytown-AU</station>
+            </dot>
+            <dot>
+                <station>Van Ness-UDC</station>
+            </dot>
+        
+            <dot>
+                <station>Cleveland Park</station>
+            </dot>
+            <dot>
+                <station>Woodley Park</station>
+            </dot>
+        
     </line>
     <route-label red></route-label>
 </div>
