@@ -6,6 +6,10 @@
 </head>
 <body>
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script>
+<script src="dracula/raphael-min.js"></script>
+<script src="dracula/dracula_graffle.js"></script>
+<script src="dracula/dracula_graph.js"></script>
+
 <script type="text/javascript">
 d = function(t) { console.log("*"+t); }
 
@@ -130,7 +134,36 @@ Rail = function(params) {
                 station.together.push(nto);
             }
         }
-    };
+    },
+    this.makeGraph = function() {
+        var g = new Graph();
+        for(key in this.stations) {
+            var station = this.stations[key];
+            g.addNode(station.code, {label: station.name});
+        }
+
+        for(key in this.stations) {
+            var station = this.stations[key];
+            /*for(ley in station.together) {
+                g.addEdge(""+station, ""+station.together[key])
+            }*/
+            if(station.prev) {
+                //g.addEdge(""+station.code, ""+station.prev.code);
+            }
+            if(station.next) {
+                for(kline in station.next) {
+                    var line = station.next[kline];
+                    console.log(station+" -> "+line);
+                    if(line != false && line != null) {
+                        g.addEdge(""+station.code, ""+line.code);
+                    }
+                }
+            }
+        }
+        var layout = new Graph.Layout.Spring(g);
+        var render = new Graph.Renderer.Raphael('canvas', g, 1024, 768);
+        render.draw();
+    }
 };
 
 Rail.prototype = {
@@ -196,9 +229,11 @@ metro = new Rail({
 });
 WMATA.getblob(function() {
     metro.fill();
+    metro.makeGraph();
 });
 
 
 </script>
+<div id="canvas"></div>
 </body>
 </html>
