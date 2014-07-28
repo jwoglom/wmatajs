@@ -6,9 +6,6 @@
 </head>
 <body>
 <script type="text/javascript" src="https://code.jquery.com/jquery-1.10.2.js"></script>
-<script src="dracula/raphael-min.js"></script>
-<script src="dracula/dracula_graffle.js"></script>
-<script src="dracula/dracula_graph.js"></script>
 
 <script type="text/javascript">
 d = function(t) { console.log("*"+t); }
@@ -21,6 +18,7 @@ WMATA = {
     blob: {},
     // Run a modified jQuery.get
     getblob: function(cb) {
+        window.st = +new Date;
         var ths = this;
         $.get("blob.txt", {}, function(ret) {
             ths.blob = JSON.parse(ret);
@@ -136,33 +134,7 @@ Rail = function(params) {
         }
     },
     this.makeGraph = function() {
-        var g = new Graph();
-        for(key in this.stations) {
-            var station = this.stations[key];
-            g.addNode(station.code, {label: station.name});
-        }
 
-        for(key in this.stations) {
-            var station = this.stations[key];
-            /*for(ley in station.together) {
-                g.addEdge(""+station, ""+station.together[key])
-            }*/
-            if(station.prev) {
-                //g.addEdge(""+station.code, ""+station.prev.code);
-            }
-            if(station.next) {
-                for(kline in station.next) {
-                    var line = station.next[kline];
-                    console.log(station+" -> "+line);
-                    if(line != false && line != null) {
-                        g.addEdge(""+station.code, ""+line.code);
-                    }
-                }
-            }
-        }
-        var layout = new Graph.Layout.Spring(g);
-        var render = new Graph.Renderer.Raphael('canvas', g, 1024, 768);
-        render.draw();
     }
 };
 
@@ -227,13 +199,61 @@ Station.prototype = {
 metro = new Rail({
     DisplayName: "Washington Metro"
 });
+/*
 WMATA.getblob(function() {
     metro.fill();
+    console.log((+new Date - window.st)+" ms");
     metro.makeGraph();
 });
-
+*/
 
 </script>
-<div id="canvas"></div>
+
+<style>
+/*
+OR: rgb(222, 135, 4)
+SV: rgb(161, 163, 161)
+BL: rgb(10, 148, 214)
+YL: rgb(247, 212, 24)
+RD: rgb(191, 18, 56)
+GR: rgb(2, 177, 82)
+*/
+line {
+    display: inline-block;
+    position: absolute;
+    width: 100%;
+    height: 64px;
+    border-radius: 15px;
+}
+*[red] {
+    background-color: rgb(191, 18, 56);
+    margin: 1px solid rgb(245, 205, 212);
+}
+line dot {
+    display: block;
+    background-image: url(dot.svg);
+    width: 60px;
+    height: 60px;
+    margin: -5px;
+}
+lbl {
+    display: block;
+    display: inline-block;
+    width: 64px;
+    height: 64px;
+    background-image: url(lbl-red.png);
+    background-size: 64px 64px;
+    margin-right: 10px;
+}
+lbl span {
+    padding: 40px 20px;
+}
+</style>
+<div class="lines">
+    <lbl red></lbl>
+    <line red>
+        <dot />&nbsp;
+    </div>
+</dot>
 </body>
 </html>
