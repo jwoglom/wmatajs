@@ -220,40 +220,51 @@ GR: rgb(2, 177, 82)
 */
 line {
     display: inline-block;
-    position: absolute;
-    width: 100%;
+    width: auto;
     height: 64px;
     border-radius: 15px;
+    padding: 0 50px;
+    margin: 0 10px;
 }
 *[red] {
     background-color: rgb(191, 18, 56);
     margin: 1px solid rgb(245, 205, 212);
 }
-line dot {
-    display: block;
-    background-image: url(dot.svg);
-    width: 60px;
-    height: 60px;
-    margin: -5px;
-}
-lbl {
-    display: block;
+route-label {
     display: inline-block;
     width: 64px;
     height: 64px;
     background-image: url(lbl-red.png);
     background-size: 64px 64px;
-    margin-right: 10px;
 }
-lbl span {
-    padding: 40px 20px;
+line dot {
+    display: inline-block;
+    background-image: url(dot.svg);
+    width: 60px;
+    height: 60px;
+    margin: 2px 10px;
+}
+line dot station {
+    position: absolute;
+    top: 105px;
+    margin-left: -60px;
+    width: 100px;
+    display: inline-block;
+    transform: rotate(-45deg);
+    text-align: right;
 }
 </style>
 <div class="lines">
-    <lbl red></lbl>
+    <route-label red></route-label>
     <line red>
-        <dot />&nbsp;
-    </div>
-</dot>
+        <dot>
+            <station>Shady Grove</station>
+        </dot>
+        <dot>
+            <station>Rockville</station>
+        </dot>
+    </line>
+    <route-label red></route-label>
+</div>
 </body>
 </html>
